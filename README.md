@@ -64,7 +64,7 @@ BOOKS_PATH=./data/books.json  # optional override path
 ```
 
 ### 3️⃣ Prepare data
-# Ensure you have the following in the data/ folder:
+Ensure you have the following in the data/ folder:
 * books.json
 * titanic.db
 * happiness_index.db
