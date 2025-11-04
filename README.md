@@ -53,13 +53,15 @@ source venv/bin/activate  # (on Windows: venv\Scripts\activate)
 
 # Install dependencies
 pip install -r requirements.txt
+```
 
 ### 2️⃣ Set up environment variables
-
+```bash
 # Create a .env file in the project root and include:
 OPENAI_API_KEY=your_openai_key
 WEATHER_API_KEY=your_weatherapi_key
 BOOKS_PATH=./data/books.json  # optional override path
+```
 
 ### 3️⃣ Prepare data
 # Ensure you have the following in the data/ folder:
@@ -68,5 +70,7 @@ BOOKS_PATH=./data/books.json  # optional override path
 * happiness_index.db
 
 ### 4️⃣ Run the app
+```bash
 streamlit run main.python
 # Open your browser at http://localhost:8501
+```
