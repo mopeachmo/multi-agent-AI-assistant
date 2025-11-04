@@ -1,0 +1,154 @@
+[
+  {
+    "title": "Hamlet",
+    "author": "William Shakespeare",
+    "published_year": 1603,
+    "genre": "Play",
+    "act": "Act 1",
+    "scene": "Scene 1",
+    "lines": [
+      "Who's there?",
+      "Nay, answer me: stand, and unfold yourself.",
+      "Long live the king!"
+    ]
+  },
+  {
+    "title": "Hamlet",
+    "author": "William Shakespeare",
+    "published_year": 1603,
+    "genre": "Play",
+    "act": "Act 3",
+    "scene": "Scene 1",
+    "lines": [
+      "To be, or not to be: that is the question:",
+      "Whether 'tis nobler in the mind to suffer",
+      "The slings and arrows of outrageous fortune,"
+    ]
+  },
+  {
+    "title": "Sonnet 18",
+    "author": "William Shakespeare",
+    "published_year": 1609,
+    "genre": "Poem",
+    "line_number": 1,
+    "text": "Shall I compare thee to a summer’s day?"
+  },
+  {
+    "title": "Sonnet 18",
+    "author": "William Shakespeare",
+    "published_year": 1609,
+    "genre": "Poem",
+    "line_number": 2,
+    "text": "Thou art more lovely and more temperate:"
+  },
+  {
+    "title": "The Raven",
+    "author": "Edgar Allan Poe",
+    "published_year": 1845,
+    "genre": "Poem",
+    "stanza": 1,
+    "lines": [
+      "Once upon a midnight dreary, while I pondered, weak and weary,",
+      "Over many a quaint and curious volume of forgotten lore—",
+      "While I nodded, nearly napping, suddenly there came a tapping,"
+    ]
+  },
+  {
+    "title": "The Raven",
+    "author": "Edgar Allan Poe",
+    "published_year": 1845,
+    "genre": "Poem",
+    "stanza": 2,
+    "lines": [
+      "Ah, distinctly I remember it was in the bleak December;",
+      "And each separate dying ember wrought its ghost upon the floor.",
+      "Eagerly I wished the morrow;—vainly I had sought to borrow"
+    ]
+  },
+  {
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "published_year": 1813,
+    "genre": "Novel",
+    "chapter": 1,
+    "paragraph": "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife."
+  },
+  {
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "published_year": 1813,
+    "genre": "Novel",
+    "chapter": 3,
+    "paragraph": "Darcy had at first scarcely allowed her to be pretty; he had looked at her without admiration at the ball."
+  },
+  {
+    "title": "Moby Dick",
+    "author": "Herman Melville",
+    "published_year": 1851,
+    "genre": "Novel",
+    "chapter": "Loomings",
+    "paragraph": "Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world."
+  },
+  {
+    "title": "Moby Dick",
+    "author": "Herman Melville",
+    "published_year": 1851,
+    "genre": "Novel",
+    "chapter": "The Whiteness of the Whale",
+    "paragraph": "Is it that by its indefiniteness it shadows forth the heartless voids and immensities of the universe, and thus stabs us from behind with the thought of annihilation?"
+  },
+  {
+    "title": "The Road Not Taken",
+    "author": "Robert Frost",
+    "published_year": 1916,
+    "genre": "Poem",
+    "stanza": 1,
+    "lines": [
+      "Two roads diverged in a yellow wood,",
+      "And sorry I could not travel both",
+      "And be one traveler, long I stood"
+    ]
+  },
+  {
+    "title": "The Road Not Taken",
+    "author": "Robert Frost",
+    "published_year": 1916,
+    "genre": "Poem",
+    "stanza": 2,
+    "lines": [
+      "Then took the other, as just as fair,",
+      "And having perhaps the better claim,",
+      "Because it was grassy and wanted wear;"
+    ]
+  },
+  {
+    "title": "The Odyssey",
+    "author": "Homer",
+    "published_year": -700,
+    "genre": "Epic",
+    "book": 1,
+    "lines": [
+      "Tell me, O Muse, of that ingenious hero who travelled far and wide",
+      "after he had sacked the famous town of Troy."
+    ]
+  },
+  {
+    "title": "The Odyssey",
+    "author": "Homer",
+    "published_year": -700,
+    "genre": "Epic",
+    "book": 9,
+    "lines": [
+      "I am Odysseus, son of Laertes, known to the world",
+      "for every kind of craft—my fame has reached the skies."
+    ]
+  },
+  {
+    "title": "Leaves of Grass",
+    "author": "Walt Whitman",
+    "published_year": 1855,
+    "genre": "Poetry Collection",
+    "section": "Song of Myself",
+    "excerpt": "I celebrate myself, and sing myself, And what I assume you shall assume, For every atom belonging to me as good belongs to you."
+  }
+]
