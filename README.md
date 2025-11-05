@@ -35,7 +35,6 @@ The Coordinator routes each question to the relevant agent and refines their res
 ### 💬 Streamlit UI
 - Clean interface with icons and sub-titles for each agent.  
 - User-friendly chat window for free-form questions.  
-- Explanatory captions and UK-English spelling throughout.
 
 ---
 
