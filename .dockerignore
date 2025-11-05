@@ -1,0 +1,24 @@
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual envs
+.venv/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Secrets (渡すなら -e で)
+.env
+
+# Large temp or local data dumps
+*.log

@@ -45,7 +45,7 @@ def _load_sqldb(which: str) -> SQLDatabase:
         raise FileNotFoundError(
             f"SQLite file not found at {path}. Make sure your DBs are in a folder named 'data'."
         )
-    uri = f"sqlite:///{path.replace('\\', '/')}" 
+    uri = f"sqlite:///{path.replace(os.sep, '/')}"
     return SQLDatabase.from_uri(uri) # then you can pass the database to SQLDatabaseToolkit
 
 # MAIN: Execute the SQL query via the agent and return the answer
