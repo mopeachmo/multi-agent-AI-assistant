@@ -30,7 +30,7 @@ This project solves the challenge of managing heterogeneous data queries in one 
   → Example: *“Which country was the happiest in 2019?”*
 
 ### 🧭 Coordinator
-The Coordinator routes each question to the relevant agent and refines their responses into a coherent, UK-English final answer.
+The Coordinator routes each question to the relevant agent and refines their responses into a coherent final answer.
 
 ### 💬 Streamlit UI
 - Clean interface with icons and sub-titles for each agent.  
