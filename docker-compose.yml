@@ -1,7 +1,6 @@
 services:
   app:
     build: .
-    container_name: multi-agent-ai
     ports:
       - "8501:8501"
     env_file: .env
@@ -16,7 +15,6 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
-    container_name: postgres-lego
     environment:
       POSTGRES_USER: lego
       POSTGRES_PASSWORD: lego

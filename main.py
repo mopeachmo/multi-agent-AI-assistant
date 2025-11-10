@@ -7,15 +7,15 @@ from coordinator import graph
 load_dotenv()
 
 # Title and description
-st.title("📚🌦️🗃️ Multi-Agent AI Assistant")
+st.title("Multi-Agent AI Assistant")
 st.markdown(
     """
-### 🤖 Integrated AI Agents
+### Integrated AI Agents
 This application brings together **three specialised agents** working collaboratively:
 
-- **📚 Book Agent** – Answers questions about literature by searching a local `books.json` file (titles, authors, quotes, and themes).  
-- **🌦️ Weather Agent** – Retrieves current weather data for cities worldwide using *WeatherAPI.com*. If you're unsure of a city name, this agent can help you find it.   
-- **🗃️ Database Agent** – Interprets analytical questions and queries local SQLite databases (`titanic.db` and `happiness_index.db`) to produce natural-language summaries.  
+- **Book Agent** – Answers questions about literature by searching a local `books.json` file (titles, authors, quotes, and themes).  
+- **Weather Agent** – Retrieves current weather data for cities worldwide using *WeatherAPI.com*. If you're unsure of a city name, this agent can help you find it.   
+- **SQL Agent** – Interprets analytical questions and queries postgreSQL databases (`lego`, `titanic` and `happiness_index`) to produce natural-language summaries.  
 
 Each agent contributes evidence or analysis which the system’s *Coordinator* then refines into a final response.
 """,
