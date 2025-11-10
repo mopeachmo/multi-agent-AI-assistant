@@ -11,15 +11,43 @@ load_dotenv()
 llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
 
 # sys message for final answer composition
-FINAL_SYS = SystemMessage(content="You are the final answer composer. Read the prior messages and produce a concise and helpful answer. DO NOT over write the prior answers! Just summrise or make it easier to read. ")
+ROUTER_SYS = SystemMessage(content=(
+    "You are a strict router. Classify the user's last message into exactly one of: "
+    "'book', 'weather', 'sql'. Return ONLY the single word."
+))
 
-# The coordinator node: classifies user intent into one of: database, book, weather.
-def coordinator(state):
-    user = state["messages"][-1].content if state["messages"] else "" # get latest user message
-    label = llm.invoke( 
-        f"Classify intent: one of [database, book, weather]. User: {user}\nAnswer one word only."
-    ).content.strip().lower() # remove whitespace and make lowercase
-    return {"intent": label}
+FINAL_SYS = SystemMessage(content=(
+    "You are an expert assistant. "
+    "Using the conversation history, produce a final answer to the user's last question. "
+    "Incorporate any tool call results as needed. "
+    "If you do not have enough information to answer, say so honestly."
+))  
+
+# The coordinator node: classifies user intent into one of: sql, book, weather.
+def _coordinator(text: str) -> str:
+    t = text.lower()
+    # weather keywords
+    if any(k in t for k in ["weather", "forecast", "temperature", "rain", "晴れ", "天気", "降水"]):
+        return "weather"
+    # book keywords
+    if any(k in t for k in ["book", "novel", "poem", "quote", "author", "line", "hamlet", "raven", "詩", "小説", "台詞", "作者"]):
+        return "book"
+    # db keywords (lego / titanic / happiness などはSQLに寄せる)
+    if any(k in t for k in ["lego", "titanic", "happiness", "sql", "table", "count", "average", "top", "rank", "group by"]):
+        return "sql"
+    return ""
+
+def route_node(state: MessagesState):
+    user = state["messages"][-1].content if state.get("messages") else ""
+    # まずルール
+    hint = _coordinator(user)
+    if hint:
+        return {"route": hint}
+    # だめ押しでLLMに確認
+    label = llm.invoke([ROUTER_SYS, HumanMessage(content=user)]).content.strip().lower()
+    if label not in {"book", "weather", "sql"}:
+        label = "sql"  # 既定はSQL
+    return {"route": label}
 
 # Finalise node: collate tool calls and produce final answer
 def finalise(state: MessagesState):
@@ -39,19 +67,24 @@ def finalise(state: MessagesState):
 
 # Build the state graph
 builder = StateGraph(MessagesState)
-builder.add_node("coordinator", coordinator)
-builder.add_node("database", sql_graph)
+builder.add_node("coordinator", route_node)
+builder.add_node("sql", sql_graph)
 builder.add_node("book", book_graph)
 builder.add_node("weather", weather_graph)
 builder.add_node("finalise", finalise)
 builder.add_node("end", finalise)
 
 builder.add_edge(START, "coordinator")
-builder.add_conditional_edges(
-    "coordinator",
-    lambda s: s.get("intent", "end")
-)
-builder.add_edge("database", "finalise")
+
+def _on_route(state):
+    return state.get("route", "sql")
+
+builder.add_conditional_edges("coordinator", _on_route, {
+    "book": "book",
+    "sql": "sql",
+    "weather": "weather",
+})
+builder.add_edge("sql", "finalise")
 builder.add_edge("book", "finalise")
 builder.add_edge("weather", "finalise")
 builder.add_edge("finalise", END)

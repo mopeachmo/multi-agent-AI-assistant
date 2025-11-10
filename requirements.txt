@@ -1,0 +1,8 @@
+streamlit
+langchain
+langgraph
+langchain-openai
+langchain-community
+python-dotenv
+requests
+psycopg2-binary

@@ -4,15 +4,9 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits import SQLDatabaseToolkit, create_sql_agent
+from langchain_community.agent_toolkits import create_sql_agent
 
 load_dotenv()
-
-# to make sure we can find the database
-_THIS_DIR = os.path.dirname(os.path.abspath(__file__))  # this directory
-DATA_DIR = os.path.abspath(os.path.join(_THIS_DIR, "..", "data")) # data directory
-TITANIC_DB_PATH = os.path.join(DATA_DIR, "titanic.db")
-HAPPY_DB_PATH = os.path.join(DATA_DIR, "happiness_index.db")
 
 # LLM
 CLF_LLM = ChatOpenAI(model="gpt-4.1-mini", temperature=0)       # for routing
@@ -20,32 +14,40 @@ SQL_LLM = ChatOpenAI(model="gpt-4.1-mini", temperature=0)       # for SQL agent
 
 # System prompt for the agent
 CLASSIFIER_SYS = SystemMessage(content=(
-    "You are a strict classifier. Given a user question, answer exactly one token: "
-    "'titanic' if it refers to Titanic passengers/ship data; "
-    "'happiness' if it refers to World Happiness/Year/Rank/Score style data. "
-    "If uncertain, choose the most likely based on wording. Respond with ONLY the one word."
+    "You are a strict classifier. "
+    "Return EXACTLY one token among: 'titanic', 'happiness', 'lego'. "
+    "Pick the most plausible based on wording. Respond with ONLY the one word."
 ))
 
 # classify titanic or hapinness
 def _classify_db(question: str) -> str: # question = user query
-    """Return 'titanic' or 'happiness'."""
+    """Return 'titanic', 'happiness' or 'lego'."""
     resp = CLF_LLM.invoke([CLASSIFIER_SYS, HumanMessage(content=question)]) # pass system prompt + user question to LLM
     label = resp.content.strip().lower() # get response text from LLM and normalise 
     print(label)
-    return "titanic" if "titanic" in label else "happiness"
+    if label not in {"titanic", "happiness", "lego"}:
+        if "lego" in question.lower():
+            label = "lego"
+        else:
+            label = "happiness"
+    return label
+
+# ---- 2) 接続URIは環境変数から取得（ハードコード禁止）----
+def _get_db_uri(label: str) -> str:
+    env_map = {
+        "titanic": "TITANIC_DB_URI",
+        "happiness": "HAPPINESS_DB_URI",
+        "lego": "LEGO_DB_URI",
+    }
+    env_key = env_map[label]
+    uri = os.getenv(env_key)
+    if not uri:
+        raise RuntimeError(f"Missing DB URI for '{label}'. Set {env_key} in .env")
+    return uri
 
 # load the correct SQLDatabase
 def _load_sqldb(which: str) -> SQLDatabase:
-    if which == "titanic": # which = "titanic" or "happiness"
-        path = TITANIC_DB_PATH
-    else:
-        path = HAPPY_DB_PATH
-    # Check file exists
-    if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"SQLite file not found at {path}. Make sure your DBs are in a folder named 'data'."
-        )
-    uri = f"sqlite:///{path.replace(os.sep, '/')}"
+    uri = _get_db_uri(which)
     return SQLDatabase.from_uri(uri) # then you can pass the database to SQLDatabaseToolkit
 
 # MAIN: Execute the SQL query via the agent and return the answer
@@ -57,10 +59,15 @@ def _run_sql_agent(question: str, db: SQLDatabase) -> str:
         llm=SQL_LLM,
         db=db,
         agent_type="openai-tools",
-        verbose=False
+        verbose=True,
+        top_k=5,  # use top 5 results from DB
+        use_query_checker=True, # enable query checking
     )
     result: Dict[str, Any] = agent.invoke({"input": question}) # run the agent with the user question
-    return result.get("output", "").strip() # return the answer text in natural language
+    out = result.get("output", "").strip()
+    if not out:
+        out = "I couldn't find an answer to your question."
+    return out
 
 # LangGraph Node function
 def sql_graph(state) -> Dict[str, Any]:
@@ -81,16 +88,14 @@ def sql_graph(state) -> Dict[str, Any]:
     if not user_msg:
         return {"messages": [AIMessage(content="I didn’t receive a question.")]}
     # MAIN LOGIC
-    which = _classify_db(user_msg)
+    label = _classify_db(user_msg)
     try:
-        db = _load_sqldb(which)
+        db = _load_sqldb(label)
         answer = _run_sql_agent(user_msg, db)
+        prefix = f"[database: {label}]\n"
+        return {"messages": [AIMessage(content=prefix + answer)]}
     except Exception as e:
-        # Return error text as an AIMessage so finalise can still compose
         return {"messages": [AIMessage(content=f"SQL agent error: {e}")]}
-    # Helpful tag to indicate which DB was used (kept concise for finalise)
-    prefix = f"[database: {which}]\n"
-    return {"messages": [AIMessage(content=prefix + answer)]}
 
 
 # ========= test =========
@@ -100,6 +105,8 @@ if __name__ == "__main__":
         "Which country had the highest happiness score in 2019?",
         "What was the average age of Titanic passengers by class?",
         "Show the top 5 happiest countries overall.",
+        "Top five LEGO themes by number of sets.",
+        "How many LEGO sets exist in total?"
     ]
     for q in test_queries:
         print("\n=== USER:", q)
