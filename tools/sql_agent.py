@@ -24,7 +24,7 @@ def _classify_db(question: str) -> str: # question = user query
     """Return 'titanic', 'happiness' or 'lego'."""
     resp = CLF_LLM.invoke([CLASSIFIER_SYS, HumanMessage(content=question)]) # pass system prompt + user question to LLM
     label = resp.content.strip().lower() # get response text from LLM and normalise 
-    print(label)
+    print("[sql_agent]", label)
     if label not in {"titanic", "happiness", "lego"}:
         if "lego" in question.lower():
             label = "lego"
@@ -47,27 +47,61 @@ def _get_db_uri(label: str) -> str:
 
 # load the correct SQLDatabase
 def _load_sqldb(which: str) -> SQLDatabase:
-    uri = _get_db_uri(which)
-    return SQLDatabase.from_uri(uri) # then you can pass the database to SQLDatabaseToolkit
+    uri = _get_db_uri(which)                      
+    include = None
+    if which == "happiness":
+        include = ["happiness", "happy", "country"]
+    elif which == "titanic":
+        include = ["passengers", "survivors", "ships", "class", "age"] 
+    elif which == "lego":
+        include = ["lego_sets", "lego_themes"]     # 必要に応じて追加
+    return SQLDatabase.from_uri(
+        uri,
+        sample_rows_in_table_info=3,
+        include_tables=include
+    )
 
 # MAIN: Execute the SQL query via the agent and return the answer
+STRICT_PREFIX = (
+    "You must answer ONLY by generating and running SQL on the connected database. "
+    "Do not use general knowledge. If the schema does not support the question, "
+    "reply EXACTLY with: NO_DB_ANSWER."
+)
+
 def _run_sql_agent(question: str, db: SQLDatabase) -> str:
-    """
-    Create a SQL agent and execute the question. Returns the agent's natural-language answer.
-    """
-    agent = create_sql_agent( # create a LangChain SQL agent
+    agent = create_sql_agent(
         llm=SQL_LLM,
         db=db,
         agent_type="openai-tools",
         verbose=True,
-        top_k=5,  # use top 5 results from DB
-        use_query_checker=True, # enable query checking
+        top_k=5,
+        use_query_checker=True,
+        return_intermediate_steps=True,
+        handle_parsing_errors=True,
+        prefix=STRICT_PREFIX,
     )
-    result: Dict[str, Any] = agent.invoke({"input": question}) # run the agent with the user question
-    out = result.get("output", "").strip()
-    if not out:
-        out = "I couldn't find an answer to your question."
-    return out
+    # 1回目
+    result = agent.invoke({"input": question})
+    out = (result.get("output") or "").strip()
+    steps = result.get("intermediate_steps") or []
+    used_tool = bool(steps)
+
+    # ツール未使用 or 明らかに一般知識なら再試行
+    if (not used_tool) or ("World Happiness Report" in out):
+        retry_q = (
+            f"{question}\n\n"
+            "IMPORTANT: Use ONLY the SQL tool and return the query result. "
+            "Do NOT rely on general knowledge."
+        )
+        result = agent.invoke({"input": retry_q})
+        out = (result.get("output") or "").strip()
+        steps = result.get("intermediate_steps") or []
+        used_tool = bool(steps)
+
+    if not used_tool:
+        return "SQL agent error: SQL tool was not invoked. Check tables exist and URIs are correct."
+
+    return out or "No result returned from database."
 
 # LangGraph Node function
 def sql_graph(state) -> Dict[str, Any]:
@@ -89,6 +123,7 @@ def sql_graph(state) -> Dict[str, Any]:
         return {"messages": [AIMessage(content="I didn’t receive a question.")]}
     # MAIN LOGIC
     label = _classify_db(user_msg)
+    print(f"[sql_agent] target_db={label}")
     try:
         db = _load_sqldb(label)
         answer = _run_sql_agent(user_msg, db)
