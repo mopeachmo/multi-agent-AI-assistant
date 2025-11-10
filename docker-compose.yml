@@ -1,14 +1,13 @@
 services:
   app:
     build: .
-    image: multi-agent-ai:latest
     container_name: multi-agent-ai
     ports:
       - "8501:8501"
     env_file: .env
-    # titanic.db / happiness_index.db をホストから読む場合はマウント
     volumes:
       - ./data:/app/data:ro
+      # ro = read
     depends_on:
       postgres:
         condition: service_healthy
