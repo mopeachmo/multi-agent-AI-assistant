@@ -12,6 +12,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    init: true 
 
   postgres:
     image: postgres:16
