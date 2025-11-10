@@ -32,7 +32,7 @@ def _classify_db(question: str) -> str: # question = user query
             label = "happiness"
     return label
 
-# ---- 2) 接続URIは環境変数から取得（ハードコード禁止）----
+# get the correct DB URI from .env
 def _get_db_uri(label: str) -> str:
     env_map = {
         "titanic": "TITANIC_DB_URI",
@@ -48,46 +48,46 @@ def _get_db_uri(label: str) -> str:
 # load the correct SQLDatabase
 def _load_sqldb(which: str) -> SQLDatabase:
     uri = _get_db_uri(which)                      
-    include = None
-    if which == "happiness":
-        include = ["happiness", "happy", "country"]
+    include = None #reset to include all tables
+    if which == "happiness": 
+        include = ["happiness"] 
     elif which == "titanic":
-        include = ["passengers", "survivors", "ships", "class", "age"] 
+        include = ["passengers"] 
     elif which == "lego":
-        include = ["lego_sets", "lego_themes"]     # 必要に応じて追加
+        include = ["lego_sets", "lego_themes"]    
     return SQLDatabase.from_uri(
         uri,
-        sample_rows_in_table_info=3,
-        include_tables=include
+        sample_rows_in_table_info=3, # show 3 sample rows in table info
+        include_tables=include # only include specified tables
     )
 
-# MAIN: Execute the SQL query via the agent and return the answer
 STRICT_PREFIX = (
     "You must answer ONLY by generating and running SQL on the connected database. "
     "Do not use general knowledge. If the schema does not support the question, "
     "reply EXACTLY with: NO_DB_ANSWER."
 )
 
+# run the SQL agent with retries
 def _run_sql_agent(question: str, db: SQLDatabase) -> str:
     agent = create_sql_agent(
         llm=SQL_LLM,
         db=db,
-        agent_type="openai-tools",
-        verbose=True,
-        top_k=5,
-        use_query_checker=True,
-        return_intermediate_steps=True,
-        handle_parsing_errors=True,
-        prefix=STRICT_PREFIX,
+        agent_type="openai-tools", 
+        verbose=True, # show reasoning steps
+        top_k=5, # use top 5 relevant tables
+        use_query_checker=True, # enable SQL query checking
+        return_intermediate_steps=True, # get reasoning steps
+        handle_parsing_errors=True, # auto-handle SQL errors
+        prefix=STRICT_PREFIX, # strict system prompt
     )
-    # 1回目
-    result = agent.invoke({"input": question})
+    # First attempt
+    result = agent.invoke({"input": question}) 
     out = (result.get("output") or "").strip()
-    steps = result.get("intermediate_steps") or []
-    used_tool = bool(steps)
+    steps = result.get("intermediate_steps") or [] # reasoning steps
+    used_tool = bool(steps) # whether SQL tool was used
 
-    # ツール未使用 or 明らかに一般知識なら再試行
-    if (not used_tool) or ("World Happiness Report" in out):
+    # Retry if no tool used or suspicious answer
+    if (not used_tool) or ("I don't have access" in out):
         retry_q = (
             f"{question}\n\n"
             "IMPORTANT: Use ONLY the SQL tool and return the query result. "
