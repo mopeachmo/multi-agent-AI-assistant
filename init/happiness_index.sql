@@ -1,15 +1,16 @@
 
 
-CREATE TABLE "happiness_2019" (
-    overall_rank INTEGER NOT NULL,
-    country_or_region character varying(255) NOT NULL,
-    score REAL(5,2) NOT NULL,
-    gdp_per_capita REAL(10,2),
-    social_support REAL(10,2),
-    healthy_life_expectancy REAL(10,2),
-    freedom_to_make_life_choices REAL(10,2),
-    generosity REAL(10,2),
-    perceptions_of_corruption REAL(10,2)
+DROP TABLE IF EXISTS happiness_2019;
+CREATE TABLE happiness_2019 (
+    overall_rank INT PRIMARY KEY,
+    country_or_region TEXT NOT NULL,
+    score NUMERIC(5,2) NOT NULL,
+    gdp_per_capita NUMERIC(5,2),
+    social_support NUMERIC(5,2),
+    healthy_life_expectancy NUMERIC(5,2),
+    freedom_to_make_life_choices NUMERIC(5,2),
+    generosity NUMERIC(5,2),
+    perceptions_of_corruption NUMERIC(5,2)
 );
 -- skipped sequence;
 -- skipped alter sequence;

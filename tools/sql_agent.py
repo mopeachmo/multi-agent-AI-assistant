@@ -45,20 +45,20 @@ def _get_db_uri(label: str) -> str:
         raise RuntimeError(f"Missing DB URI for '{label}'. Set {env_key} in .env")
     return uri
 
-# load the correct SQLDatabase
+# load the SQLDatabase
 def _load_sqldb(which: str) -> SQLDatabase:
-    uri = _get_db_uri(which)                      
-    include = None #reset to include all tables
-    if which == "happiness": 
-        include = ["happiness"] 
+    uri = _get_db_uri(which)
+    include = None
+    if which == "happiness":
+        include = ["happiness_2019"] 
     elif which == "titanic":
-        include = ["passengers"] 
+        include = ["passenger"]        
     elif which == "lego":
-        include = ["lego_sets", "lego_themes"]    
+        include = ["lego_sets", "lego_themes", "lego_colors", "lego_parts", "lego_part_categories", "lego_inventory_sets", "lego_inventory_parts"]
     return SQLDatabase.from_uri(
         uri,
-        sample_rows_in_table_info=3, # show 3 sample rows in table info
-        include_tables=include # only include specified tables
+        sample_rows_in_table_info=3,
+        include_tables=include
     )
 
 STRICT_PREFIX = (
@@ -76,31 +76,19 @@ def _run_sql_agent(question: str, db: SQLDatabase) -> str:
         verbose=True, # show reasoning steps
         top_k=5, # use top 5 relevant tables
         use_query_checker=True, # enable SQL query checking
-        return_intermediate_steps=True, # get reasoning steps
-        handle_parsing_errors=True, # auto-handle SQL errors
-        prefix=STRICT_PREFIX, # strict system prompt
     )
     # First attempt
     result = agent.invoke({"input": question}) 
     out = (result.get("output") or "").strip()
-    steps = result.get("intermediate_steps") or [] # reasoning steps
-    used_tool = bool(steps) # whether SQL tool was used
-
-    # Retry if no tool used or suspicious answer
-    if (not used_tool) or ("I don't have access" in out):
-        retry_q = (
+    if out:
+        return out
+    retry_q = (
             f"{question}\n\n"
             "IMPORTANT: Use ONLY the SQL tool and return the query result. "
             "Do NOT rely on general knowledge."
         )
-        result = agent.invoke({"input": retry_q})
-        out = (result.get("output") or "").strip()
-        steps = result.get("intermediate_steps") or []
-        used_tool = bool(steps)
-
-    if not used_tool:
-        return "SQL agent error: SQL tool was not invoked. Check tables exist and URIs are correct."
-
+    result = agent.invoke({"input": retry_q})
+    out = (result.get("output") or "").strip()
     return out or "No result returned from database."
 
 # LangGraph Node function
